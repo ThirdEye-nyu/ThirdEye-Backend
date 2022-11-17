@@ -12,6 +12,8 @@ from .common import status  # HTTP Status Codes
 from .config import *
 # Import Flask application
 from . import app
+from service.predict_image import Predictor
+
 
 
 ######################################################################
@@ -170,6 +172,18 @@ def delete_lines(line_id):
 
     app.logger.info("line with ID [%s] delete complete.", line_id)
     return "", status.HTTP_204_NO_CONTENT
+
+
+
+
+@app.route("/predict", methods=["POST"])
+def predict():
+    predictor = Predictor()
+    data = request.get_json()
+    img_path = data["path"]
+    response = predictor.predict(img_path)
+    response["status"] = "Success"
+    return response
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
