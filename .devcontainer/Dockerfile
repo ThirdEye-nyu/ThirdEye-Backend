@@ -23,8 +23,19 @@ RUN groupadd --gid $USER_GID $USERNAME \
 RUN apt-get install -y gcc libpq-dev
 
 # Set up the Python development environment
-WORKDIR /app
 RUN python -m pip install --upgrade pip wheel
+
+RUN pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
+
+RUN git clone https://github.com/jaikarnyu/patchcore-inspection.git
+
+WORKDIR /patchcore-inspection
+
+RUN python setup.py install
+
+RUN python setup.py install_lib
+
+WORKDIR /app
 
 EXPOSE 8000
 
