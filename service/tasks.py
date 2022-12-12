@@ -5,6 +5,9 @@ from service.predict_image import Predictor
 from service.models import Lines,Status,Predictions,PredictionStatus
 from service.config import *
 import logging
+import yagmail
+import smtplib    
+
 
 logger = logging.getLogger("tasks")
 
@@ -89,7 +92,16 @@ def quality_check():
 
 def alert(email,name, quality):
     logger.info("Sending Email to {0}: Quality for line {1} decreased below threshold - Quality {2} %".format(email,name,quality))
-    
+    try:
+        yag = yagmail.SMTP(SENDER_EMAIL, SENDER_PASSWORD)
+        contents = ["Alert : Quality for line {0} is below threshold. Quality - {1} ".format(name,quality)]
+        yag.send(email, 'ThirdEye - Quality Alert', contents)
+        logger.info("Successfully sent email")
+    except smtplib.SMTPException as error:
+        logger.error(str(error))
+        logger.error("Error: unable to send email")
+
+
 
 
     

@@ -7,6 +7,7 @@ import uuid
 import os
 from werkzeug.utils import secure_filename
 import datetime
+import zipfile
 
 
 # from email.mime import application
@@ -17,6 +18,8 @@ from .config import *
 from service.train import Train
 from service.predict_image import Predictor
 from service.tasks import train_task, predict_batch_task
+from flask import send_file
+
 
 # Import Flask application
 from . import app
@@ -81,8 +84,8 @@ def create_lines():
     data_path = get_line_data_path(line.id)
     model_path = get_line_models_path(line.id)
     # Make line directory if not exists
-    if not os.path.isdir(line_path):
-        os.mkdir(line_path)
+    if not os.path.isdir(data_path):
+        os.mkdir(data_path)
     if not os.path.isdir(model_path):
         os.mkdir(model_path)
     line.data_path = data_path
@@ -278,6 +281,9 @@ def upload_training_data(line_id):
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(valid_data_path,file.filename))
 
+        app.logger.info("Training line %d", line_id)
+        train_task.apply_async((line_id,))
+
         app.logger.info('Files successfully uploaded')
         return jsonify({"file_count": len(files),"message" : "Upload Success"}), status.HTTP_200_OK
 
@@ -349,11 +355,34 @@ def quality(line_id,minutes):
     app.logger.info(predictions)
     quality = []
     for prediction in predictions:
-        prediction_quality = (1.0 - ((prediction.defects_count*1.0)/prediction.total_count))*100.0
-        quality.append((prediction.created_on, prediction_quality))
-        
+        if prediction.status == Status.TRAINED:
+            prediction_quality = (1.0 - ((prediction.defects_count*1.0)/prediction.total_count))*100.0
+            quality.append((prediction.created_on, prediction_quality))
+            
     return jsonify({"quality": quality}), status.HTTP_200_OK
 
+
+######################################################################
+# Get defective images
+######################################################################
+@app.route("/defects/<int:line_id>", methods=["GET"])
+def get_defects(line_id):
+    """
+    Retrieve defects from the line
+    """
+
+    zip_file = path + "/" + "defects.zip"
+    zipf = zipfile.ZipFile(zip_file,'w', zipfile.ZIP_DEFLATED)
+    defects_path = get_line_defects_path(line_id)
+    for root,dirs, files in os.walk(defects_path):
+        for file in files:
+            zipf.write(defects_path+"/" + file)
+    zipf.close()
+    return send_file(zip_file,
+            mimetype = 'zip',
+            attachment_filename= 'Name.zip',
+            as_attachment = True)
+            
 
 
 
@@ -373,7 +402,7 @@ def get_line_data_path(line_id):
     return os.path.join(app.config['DATA_FOLDER'],  str(line_id))
 
 def get_line_models_path(line_id):
-    return os.path.join(app.config['MODELS_PATH'],  str(line_id))
+    return os.path.join(app.config['MODELS_FOLDER'],  str(line_id))
 
 def get_line_defects_path(line_id):
     return os.path.join(app.config['DEFECTS_FOLDER'],  str(line_id))

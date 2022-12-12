@@ -123,6 +123,10 @@ class Lines(db.Model):
                 )
             self.data_path = data.get("data_path", "")
             self.device_code = data.get("device_code", "")
+            self.alert_threshold = data.get("alert_threshold", 100)
+            self.device_code = data.get("device_code", "")
+            self.alert_email = data.get("alert_email", "")
+            
 
         except KeyError as error:
             raise DataValidationError("Invalid line : missing " + str(error.args[0])
