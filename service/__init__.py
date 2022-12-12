@@ -8,10 +8,32 @@ import sys
 from flask import Flask
 from service import config
 from .common import log_handlers
+from celery import Celery
+
+
+def make_celery(app):
+    celery = Celery(app.import_name)
+    celery.conf.update(app.config["CELERY_CONFIG"])
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
 
 # Create Flask application
 app = Flask(__name__)
 app.config.from_object(config)
+celery = make_celery(app)
+celery.conf.beat_schedule = {
+    'add-every-30-seconds': {
+        'task': 'service.tasks.quality_check',
+        'schedule': 60.0
+    },
+}
+celery.conf.timezone = 'UTC'
 
 # Dependencies require we import the routes AFTER the Flask app is created
 # pylint: disable=wrong-import-position, wrong-import-order

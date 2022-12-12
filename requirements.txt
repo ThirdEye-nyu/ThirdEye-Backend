@@ -6,6 +6,8 @@ Flask==2.1.2
 Flask-SQLAlchemy==2.5.1
 psycopg2==2.9.3
 python-dotenv==0.20.0
+celery==5.2.7
+Redis-4.4.0
 
 # Runtime dependencies
 gunicorn==20.1.0
