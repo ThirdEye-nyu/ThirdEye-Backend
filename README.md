@@ -9,4 +9,14 @@
 ## Overview
 
 Following is the project setup for the ThirdEye Backend functionality of a anamoly detection tool to improve Quality assurance process in Manufacturing. It allows for creation of multiple production lines for each customer, detect anamolies, view analytics and alert when Quality percentage drops below certain Threshold
-## Available REST API's
+
+
+## Open in vscode using code .
+
+## open in container
+
+## honcho start to start the apis
+
+## celery -A service.celery worker - to start the worker
+
+## celery -A service.celery beat - to start periodic quality checks
