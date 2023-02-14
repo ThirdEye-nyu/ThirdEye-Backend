@@ -55,4 +55,4 @@ CELERY_CONFIG={
 ALERTS_CHECK_TIMER = 3 # in minutes
 
 SENDER_EMAIL = "sakhamurijaikar@gmail.com"
-SENDER_PASSWORD = "bjciegqqxqznptua"
+SENDER_PASSWORD = ""
